@@ -22,7 +22,7 @@ jobs:
       - name: Extract label and update file
         run: |
           PR_NUMBER="${{ github.event.pull_request.number }}"
-          PR_LABELS=$(gh api repos/${{ github.repository }}/issues/$PR_NUMBER/labels --jq '.[].name')
+          PR_LABELS=$(gh api repos/${{ github.repository }}/issues/$PR_NUMBER/labels --jq '[.[].name]')
           ALLOWED='["label-1", "label-2", "label-3", "none"]'
 
           printf "labels for pr %s: %s\n" "$PR_NUMBER" "$PR_LABELS"
