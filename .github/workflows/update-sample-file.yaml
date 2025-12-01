@@ -1,0 +1,44 @@
+name: Update Sample File
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  update-sample-file:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Extract label and update file
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_LABELS=$(gh api repos/${{ github.repository }}/issues/$PR_NUMBER/labels --jq '.[].name')
+          ALLOWED='["label-1", "label-2", "label-3", "none"]'
+
+          desired_label=$(jq -r -n \
+            --argjson pr_labels "$PR_LABELS" \
+            --argjson allowed "$ALLOWED" \
+            '$pr_labels[] | select(. as $x | $allowed | index($x))' \
+            | head -n 1)
+          
+          printf "%s" "$desired_label" >> sample_file
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Commit and push file update
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add sample_file
+          git commit -m "Update sample file after PR merge (#${{ github.event.pull_request.number }})"
+          git push origin main

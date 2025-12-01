@@ -1,0 +1,27 @@
+name: Validate Labels
+
+on:
+  pull_request:
+    types: [opened, labeled, unlabeled]
+
+jobs:
+  validate-labels:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate labels count
+        run: |
+          ALLOWED='["label-1", "label-2", "label-3", "none"]'
+          PR_LABELS=$(jq -r '[.pull_request.labels[].name]' "$GITHUB_EVENT_PATH")
+          MATCH_COUNT=$(jq -n \
+            --argjson allowed "$ALLOWED" \
+            --argjson labels "$PR_LABELS" \
+            '$allowed | $labels | map(select(. as $label | $allowed | index($label))) | length')
+
+          if [ "$MATCH_COUNT" -ne '1' ]; then
+            echo "Error: PR labels must contain exactly one of the allowed labels"
+            exit 1
+          fi
+
+          echo "Labels are valid"
+          exit 0
