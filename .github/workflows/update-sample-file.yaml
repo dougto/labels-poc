@@ -34,7 +34,7 @@ jobs:
             | head -n 1)
 
           printf "found label: %s\n" "$desired_label"
-          printf "%s" "$desired_label" >> sample_file
+          printf "%s\n" "$desired_label" >> sample_file
         env:
           GH_TOKEN: ${{ github.token }}
 
